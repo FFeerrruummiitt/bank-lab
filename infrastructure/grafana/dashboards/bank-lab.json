@@ -1,0 +1,456 @@
+{
+  "id": null,
+  "uid": "bank-lab-api",
+  "title": "Bank Lab · API и логи",
+  "description": "Учебный банк: HTTP-запросы, ошибки и длительность ответа. Графики вычисляются из логов Loki.",
+  "tags": [
+    "bank-lab",
+    "QA",
+    "logs"
+  ],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "refresh": "5s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Запросов за период",
+      "type": "stat",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({service=\"bank-api\", environment=\"local\"}[$__range])) or vector(0)",
+          "queryType": "instant",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Ошибки клиента · 4xx",
+      "type": "stat",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({service=\"bank-api\", environment=\"local\"} | json | status >= 400 and status < 500 | __error__=\"\" [$__range])) or vector(0)",
+          "queryType": "instant",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Ошибки сервера · 5xx",
+      "type": "stat",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({service=\"bank-api\", environment=\"local\"} | json | status >= 500 | __error__=\"\" [$__range])) or vector(0)",
+          "queryType": "instant",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Время ответа · p95",
+      "type": "stat",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "quantile_over_time(0.95, {service=\"bank-api\", environment=\"local\"} | json | unwrap duration_ms | __error__=\"\" [$__range]) by ()",
+          "queryType": "instant",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Запросы по HTTP-статусу · за интервал",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "interval": "1m",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (count_over_time({service=\"bank-api\", environment=\"local\"} | json | __error__=\"\" [$__interval]))",
+          "legendFormat": "{{status}}",
+          "queryType": "range",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Время ответа · p95 по минутам",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 8
+      },
+      "interval": "1m",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "quantile_over_time(0.95, {service=\"bank-api\", environment=\"local\"} | json | unwrap duration_ms | __error__=\"\" [$__interval]) by ()",
+          "legendFormat": "p95",
+          "queryType": "range",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Ошибки 4xx/5xx по адресу API",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 8
+      },
+      "interval": "1m",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (path) (count_over_time({service=\"bank-api\", environment=\"local\"} | json | status >= 400 | __error__=\"\" [$__interval]))",
+          "legendFormat": "{{path}}",
+          "queryType": "range",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Логи запросов · поиск по Request ID",
+      "type": "logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "banklab-loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 13
+      },
+      "description": "Request ID берётся из заголовка X-Request-ID ответа API. Вставьте его в поле Request ID вверху дашборда. Пустое поле показывает все запросы.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service=\"bank-api\", environment=\"local\"} | json | __error__=\"\" |= \"$request_id\"",
+          "queryType": "range",
+          "datasource": {
+            "type": "loki",
+            "uid": "banklab-loki"
+          }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "request_id",
+        "label": "Request ID",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "text": "",
+            "value": "",
+            "selected": true
+          }
+        ]
+      }
+    ]
+  }
+}

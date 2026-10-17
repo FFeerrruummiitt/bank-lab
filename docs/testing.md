@@ -82,4 +82,5 @@ docker compose logs -f backend
 API пишет JSON-логи с `request_id`, HTTP-методом, путём, статусом и длительностью.
 Ответ содержит `X-Request-ID`, по которому можно найти запрос. Пароли, токены,
 номера карт и тела запросов не логируются. Это основа для следующего подключения Loki.
-Grafana и Loki пока не включены в Compose.
+Grafana, Loki и Alloy включены в Compose. Дашборд: http://localhost:3001/d/bank-lab-api.
+Инструкция и LogQL-запросы: [monitoring.md](monitoring.md).

@@ -48,4 +48,4 @@ https://github.com/FFeerrruummiitt/bank-lab
 история операций и тестовое пополнение. Валюта — KZT.
 
 Бэкенд и база запускаются в Docker, мобильное приложение — в эмуляторе или
-на телефоне. Grafana и Loki добавляются после рабочего сценария перевода.
+на телефоне. Grafana, Loki и Alloy включены в Docker Compose; см. [monitoring.md](monitoring.md).

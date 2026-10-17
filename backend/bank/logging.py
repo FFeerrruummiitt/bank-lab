@@ -2,6 +2,7 @@ import json
 import logging
 import time
 import uuid
+from datetime import datetime, timezone
 
 
 class RequestLogMiddleware:
@@ -17,6 +18,8 @@ class RequestLogMiddleware:
             return response
         # No credentials, card numbers, query strings or request bodies in logs.
         logging.getLogger('bank.requests').info(json.dumps({
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'level': 'error' if response.status_code >= 500 else 'warning' if response.status_code >= 400 else 'info',
             'service': 'bank-api', 'request_id': request_id, 'method': request.method,
             'path': request.path, 'status': response.status_code,
             'duration_ms': round((time.monotonic() - started) * 1000, 2),

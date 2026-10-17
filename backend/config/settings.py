@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 DEBUG = False
@@ -40,3 +41,17 @@ ENABLE_TEST_TOPUP = os.environ.get('ENABLE_TEST_TOPUP', 'false').lower() == 'tru
 LOGGING = {'version': 1, 'disable_existing_loggers': False,
            'handlers': {'console': {'class': 'logging.StreamHandler'}},
            'root': {'handlers': ['console'], 'level': 'INFO'}}
+
+if os.environ.get('BANK_LOG_DIR'):
+    log_dir = Path(os.environ['BANK_LOG_DIR'])
+    log_dir.mkdir(parents=True, exist_ok=True)
+    LOGGING['handlers']['request_file'] = {
+        'class': 'concurrent_log_handler.ConcurrentRotatingFileHandler',
+        'filename': str(log_dir / 'requests.jsonl'),
+        'maxBytes': 5 * 1024 * 1024,
+        'backupCount': 3,
+        'encoding': 'utf-8',
+    }
+    LOGGING['loggers'] = {
+        'bank.requests': {'handlers': ['request_file'], 'level': 'INFO', 'propagate': True},
+    }

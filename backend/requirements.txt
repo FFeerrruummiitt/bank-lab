@@ -3,3 +3,4 @@ djangorestframework>=3.16,<4
 psycopg[binary]>=3.2,<4
 gunicorn>=23,<24
 drf-spectacular>=0.28,<1
+concurrent-log-handler>=0.9.30,<1

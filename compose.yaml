@@ -22,6 +22,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Create .env first}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Create .env first}
       ENABLE_TEST_TOPUP: ${ENABLE_TEST_TOPUP:-true}
+      BANK_LOG_DIR: /var/log/banklab
+    volumes:
+      - bank-logs:/var/log/banklab
     ports:
       - '127.0.0.1:8000:8000'
     depends_on:
@@ -33,5 +36,47 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+  loki:
+    image: grafana/loki:3.7.8
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./infrastructure/loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    restart: unless-stopped
+  alloy:
+    image: grafana/alloy:v1.20.1
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy", "--disable-reporting", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./infrastructure/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - bank-logs:/var/log/banklab:ro
+      - alloy-data:/var/lib/alloy
+    depends_on:
+      - backend
+      - loki
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:13.2.4
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Run python3 scripts/init_env.py}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: 'false'
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/bank-lab.json
+    ports:
+      - '127.0.0.1:${GRAFANA_PORT:-3001}:3000'
+    volumes:
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+    restart: unless-stopped
 volumes:
   bank-data:
+  bank-logs:
+  loki-data:
+  alloy-data:
+  grafana-data:

@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+import json
 from decimal import Decimal
 from uuid import uuid4
 from django.contrib.auth import get_user_model
@@ -54,6 +55,25 @@ class BankTests(APITestCase):
         public = APIClient()
         self.assertEqual(public.get('/api/docs/').status_code, 200)
         self.assertEqual(public.get('/api/schema/').status_code, 200)
+
+    def test_request_log_has_correlation_and_excludes_credentials(self):
+        public = APIClient()
+        with self.assertLogs('bank.requests', level='INFO') as captured:
+            response = public.post('/api/auth/login/', {
+                'email': 'private-person@example.com', 'password': 'DO-NOT-LOG-THIS-SECRET',
+            }, format='json')
+        payload = json.loads(captured.records[-1].getMessage())
+        self.assertEqual(payload['request_id'], response['X-Request-ID'])
+        self.assertEqual(payload['status'], 401)
+        self.assertEqual(payload['level'], 'warning')
+        self.assertIn('timestamp', payload)
+        self.assertGreaterEqual(payload['duration_ms'], 0)
+        self.assertNotIn('DO-NOT-LOG-THIS-SECRET', json.dumps(payload))
+        self.assertNotIn('private-person@example.com', json.dumps(payload))
+
+    def test_health_checks_do_not_pollute_request_logs(self):
+        with self.assertNoLogs('bank.requests'):
+            self.assertEqual(APIClient().get('/api/health/').status_code, 200)
 
     def test_two_account_limit(self):
         self.assertEqual(self.post('accounts').status_code, 201)

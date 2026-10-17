@@ -5,6 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN useradd --create-home banklab
+RUN mkdir -p /var/log/banklab && chown banklab:banklab /var/log/banklab
 COPY --chown=banklab:banklab . .
 USER banklab
 EXPOSE 8000

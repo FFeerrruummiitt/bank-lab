@@ -11,6 +11,7 @@
 - Переводы по номеру карты между пользователями и своими счетами.
 - История операций с пагинацией, тестовое пополнение, сообщения об ошибках сети.
 - Swagger/OpenAPI, JSON-логи с идентификаторами запросов.
+- Grafana + Loki + Alloy: дашборд запросов, ошибок, задержек и поиск по Request ID.
 
 Денежные расчёты выполняет сервер через Decimal. PostgreSQL-транзакции и блокировки
 защищают баланс; повтор перевода с тем же request_id не списывает деньги дважды.
@@ -38,6 +39,10 @@ docker compose exec -T backend python manage.py seed_demo
 - API: http://localhost:8000/api/health/
 - Swagger: http://localhost:8000/api/docs/
 - OpenAPI: http://localhost:8000/api/schema/
+- Grafana: http://localhost:3001/d/bank-lab-api
+
+Вход в Grafana: `admin`, пароль — `GRAFANA_ADMIN_PASSWORD` в локальном `.env`.
+Порт 3000 занят другим приложением. Подробности: [docs/monitoring.md](docs/monitoring.md).
 
 ## Запуск Android
 
@@ -72,6 +77,7 @@ flutter build apk --debug --target-platform android-arm64
 
 ```sh
 make test
+make monitoring-check
 cd mobile
 flutter analyze
 flutter test test
@@ -95,9 +101,10 @@ make stop
 
 - mobile/lib — Flutter-интерфейс и API-клиент.
 - backend/bank — модели, API, транзакции, миграции и тесты.
-- compose.yaml — Django и PostgreSQL.
+- compose.yaml — Django, PostgreSQL, Grafana, Loki и Alloy.
+- infrastructure/ — настройки мониторинга и автоматически создаваемый дашборд.
 - docs/testing.md — демо-данные, сценарии QA, Charles и логи.
 - docs/setup.md — установка окружения.
 
-Следующие этапы: Grafana/Loki, HTTPS и практика прокси, сохранение сессии
+Следующие этапы: HTTPS и практика прокси, сохранение сессии
 в защищённом хранилище. Счета не закрываются; депозит без процентов; одна валюта KZT.

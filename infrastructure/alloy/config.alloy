@@ -1,0 +1,36 @@
+logging {
+  level = "info"
+}
+
+loki.source.file "bank_requests" {
+  targets = [{
+    "__path__"    = "/var/log/banklab/requests.jsonl",
+    "service"     = "bank-api",
+    "environment" = "local",
+  }]
+  file_match {
+    enabled     = true
+    sync_period = "5s"
+  }
+  forward_to = [loki.process.bank_requests.receiver]
+}
+
+loki.process "bank_requests" {
+  stage.json {
+    expressions = { level = "level", timestamp = "timestamp" }
+  }
+  stage.timestamp {
+    source = "timestamp"
+    format = "RFC3339Nano"
+  }
+  stage.labels {
+    values = { level = "" }
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
