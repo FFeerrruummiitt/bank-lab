@@ -71,6 +71,18 @@ class BankTests(APITestCase):
         self.assertNotIn('DO-NOT-LOG-THIS-SECRET', json.dumps(payload))
         self.assertNotIn('private-person@example.com', json.dumps(payload))
 
+    def test_log_and_response_share_active_trace_context(self):
+        from opentelemetry.trace import NonRecordingSpan, SpanContext, TraceFlags, use_span
+        context = SpanContext(trace_id=0x1234, span_id=0x5678, is_remote=False,
+                              trace_flags=TraceFlags(1))
+        with use_span(NonRecordingSpan(context)), self.assertLogs('bank.requests') as captured:
+            response = self.client.get('/api/bank/')
+        row = json.loads(captured.records[-1].getMessage())
+        self.assertEqual(response['X-Trace-ID'], '00000000000000000000000000001234')
+        self.assertEqual(row['trace_id'], response['X-Trace-ID'])
+        self.assertEqual(row['span_id'], '0000000000005678')
+        self.assertEqual(row['request_id'], response['X-Request-ID'])
+
     def test_health_checks_do_not_pollute_request_logs(self):
         with self.assertNoLogs('bank.requests'):
             self.assertEqual(APIClient().get('/api/health/').status_code, 200)

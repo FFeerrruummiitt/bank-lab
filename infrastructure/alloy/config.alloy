@@ -34,3 +34,46 @@ loki.write "local" {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
+
+// The backend exports asynchronously; no host port is exposed.
+otelcol.receiver.otlp "bank" {
+  http { endpoint = "0.0.0.0:4318" }
+  output { traces = [otelcol.processor.transform.privacy.input] }
+}
+
+otelcol.processor.transform "privacy" {
+  error_mode = "ignore"
+  trace_statements {
+    context = "span"
+    statements = [
+      `delete_key(attributes, "db.statement")`,
+      `delete_key(attributes, "db.query.text")`,
+      `delete_key(attributes, "http.url")`,
+      `delete_key(attributes, "http.target")`,
+      `delete_key(attributes, "url.full")`,
+      `delete_key(attributes, "url.query")`,
+      `delete_key(attributes, "exception.message")`,
+      `delete_key(attributes, "exception.stacktrace")`,
+    ]
+  }
+  trace_statements {
+    context = "spanevent"
+    statements = [
+      `delete_key(attributes, "exception.message")`,
+      `delete_key(attributes, "exception.stacktrace")`,
+    ]
+  }
+  output { traces = [otelcol.processor.batch.bank.input] }
+}
+
+otelcol.processor.batch "bank" {
+  timeout = "1s"
+  output { traces = [otelcol.exporter.otlp.tempo.input] }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls { insecure = true }
+  }
+}

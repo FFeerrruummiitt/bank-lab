@@ -11,6 +11,7 @@
 - Переводы по номеру карты между пользователями и своими счетами.
 - История операций с пагинацией, тестовое пополнение, сообщения об ошибках сети.
 - Swagger/OpenAPI, JSON-логи с идентификаторами запросов.
+- OpenTelemetry + Tempo: трассы Django, PostgreSQL и шагов перевода, связь с логами.
 - Grafana + Loki + Alloy: дашборд запросов, ошибок, задержек и поиск по Request ID.
 
 Денежные расчёты выполняет сервер через Decimal. PostgreSQL-транзакции и блокировки
@@ -42,7 +43,7 @@ docker compose exec -T backend python manage.py seed_demo
 - Grafana: http://localhost:3001/d/bank-lab-api
 
 Вход в Grafana: `admin`, пароль — `GRAFANA_ADMIN_PASSWORD` в локальном `.env`.
-Порт 3000 занят другим приложением. Подробности: [docs/monitoring.md](docs/monitoring.md).
+Порт 3000 занят другим приложением. Подробности: [мониторинг](docs/monitoring.md) и [трассировка](docs/tracing.md).
 
 ## Запуск Android
 
@@ -78,6 +79,7 @@ flutter build apk --debug --target-platform android-arm64
 ```sh
 make test
 make monitoring-check
+make tracing-check
 cd mobile
 flutter analyze
 flutter test test
@@ -101,7 +103,7 @@ make stop
 
 - mobile/lib — Flutter-интерфейс и API-клиент.
 - backend/bank — модели, API, транзакции, миграции и тесты.
-- compose.yaml — Django, PostgreSQL, Grafana, Loki и Alloy.
+- compose.yaml — Django, PostgreSQL, Grafana, Loki, Tempo и Alloy.
 - infrastructure/ — настройки мониторинга и автоматически создаваемый дашборд.
 - docs/testing.md — демо-данные, сценарии QA, Charles и логи.
 - docs/setup.md — установка окружения.

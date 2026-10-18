@@ -13,3 +13,6 @@ seed:
 	docker compose exec -T backend python manage.py seed_demo
 monitoring-check:
 	python3 scripts/check_monitoring.py
+
+tracing-check:
+	python3 scripts/check_tracing.py

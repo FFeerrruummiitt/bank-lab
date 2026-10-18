@@ -81,7 +81,7 @@ def find_request():
             if row.get('request_id') == request_id:
                 assert row['status'] == 401 and row['path'] == '/api/bank/'
                 assert row['level'] == 'warning' and row['duration_ms'] >= 0
-                assert set(row) <= {'timestamp', 'level', 'service', 'request_id', 'method', 'path', 'status', 'duration_ms'}
+                assert set(row) <= {'timestamp', 'level', 'service', 'request_id', 'method', 'path', 'status', 'duration_ms', 'trace_id', 'span_id'}
                 return row
     return None
 

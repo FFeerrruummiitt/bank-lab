@@ -23,6 +23,9 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Create .env first}
       ENABLE_TEST_TOPUP: ${ENABLE_TEST_TOPUP:-true}
       BANK_LOG_DIR: /var/log/banklab
+      BANK_TRACING_ENABLED: 'true'
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://alloy:4318/v1/traces
+      OTEL_PYTHON_DJANGO_EXCLUDED_URLS: '.*/api/health/'
     volumes:
       - bank-logs:/var/log/banklab
     ports:
@@ -43,6 +46,13 @@ services:
       - ./infrastructure/loki/config.yaml:/etc/loki/config.yaml:ro
       - loki-data:/loki
     restart: unless-stopped
+  tempo:
+    image: grafana/tempo:3.1.0
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./infrastructure/tempo/config.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    restart: unless-stopped
   alloy:
     image: grafana/alloy:v1.20.1
     command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy", "--disable-reporting", "/etc/alloy/config.alloy"]
@@ -53,6 +63,7 @@ services:
     depends_on:
       - backend
       - loki
+      - tempo
     restart: unless-stopped
   grafana:
     image: grafana/grafana:13.2.4
@@ -73,6 +84,7 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - loki
+      - tempo
     restart: unless-stopped
 volumes:
   bank-data:
@@ -80,3 +92,4 @@ volumes:
   loki-data:
   alloy-data:
   grafana-data:
+  tempo-data:

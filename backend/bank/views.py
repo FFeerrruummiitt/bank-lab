@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiTypes, OpenApiParameter
+from .tracing import traced
 from .models import Account, Deposit, Entry, Transfer
 from .serializers import (Credentials, Registration, AccountData, DepositData,
                           EntryData, MoneyInput, TransferInput, CloseDepositInput, HistoryPage)
@@ -18,6 +19,7 @@ from .serializers import (Credentials, Registration, AccountData, DepositData,
 User = get_user_model()
 
 
+@traced('bank.validate')
 def validated(serializer, data):
     result = serializer(data=data)
     result.is_valid(raise_exception=True)
@@ -33,6 +35,7 @@ def lock_account(user, account_id):
     return get_object_or_404(Account.objects.select_for_update(), owner=user, pk=account_id)
 
 
+@traced('bank.balance_change')
 def change(account, amount, title, reference=None):
     new_balance = account.balance + amount
     if new_balance < 0:
@@ -132,6 +135,7 @@ class TopUp(APIView):
 
 class Transfers(APIView):
     @extend_schema(request=TransferInput, responses=OpenApiTypes.OBJECT)
+    @traced('bank.transfer')
     @transaction.atomic
     def post(self, request):
         data = validated(TransferInput, request.data)

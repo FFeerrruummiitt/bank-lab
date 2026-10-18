@@ -106,11 +106,11 @@ Grafana и журнал Django находятся в отдельных Docker v
 банковскую базу — для остановки используйте `make stop`.
 
 Лог содержит только timestamp, level, service, request_id, method, path,
-status и duration_ms. Пароли, токены, тела запросов, номера карт и query string
+status, duration_ms, а при активной трассе — trace_id и span_id. Пароли, токены, тела запросов, номера карт и query string
 не записываются. В Loki индексируются только ограниченные метки, включая
 service, environment и level; request_id остаётся полем JSON.
 
-Grafana опубликована только на 127.0.0.1. Loki и Alloy доступны внутри
+Grafana опубликована только на 127.0.0.1. Loki, Tempo и Alloy доступны внутри
 Docker-сети проекта. Данные в Grafana открываются после входа.
 
 ## Проверка и диагностика
@@ -136,3 +136,8 @@ python3 scripts/check_monitoring.py --request-id UUID_ИЗ_ПРЕДЫДУЩЕЙ_
 Документация: [сбор файлов Alloy](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.file/),
 [provisioning Grafana](https://grafana.com/docs/grafana/latest/administration/provisioning/),
 [retention Loki](https://grafana.com/docs/loki/latest/operations/storage/retention/).
+
+## Трассы
+
+В записи лога появятся `trace_id`, `span_id` и ссылка **Открыть трассу**.
+[Как искать трассу, читать шаги и работать с прокси](tracing.md).
